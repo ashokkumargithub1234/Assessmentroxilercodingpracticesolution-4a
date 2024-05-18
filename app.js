@@ -4,9 +4,11 @@ const sqlite3 = require("sqlite3");
 const path = require("path");
 const format = require("date-fns/format");
 const axios = require("axios");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const databasePath = path.join(__dirname, "productsTransaction.db");
 
