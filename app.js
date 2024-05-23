@@ -34,7 +34,7 @@ initializeDbAndServer();
 const createTable = async () => {
   const createQuery = `
     CREATE TABLE IF NOT EXISTS transactions(
-        id TEXT ,
+        id INTEGER PRIMARY KEY AUTOINCREMENT ,
         title TEXT,
         price TEXT,
         description TEXT,
@@ -74,12 +74,11 @@ const fetchAndInsert = async () => {
       await database.run(query);
     }
   }
-  console.log("Transactions added");
-  return "Transactions added";
+  return "Products added";
 };
 
 app.get("/", async (request, response) => {
-  response.send("Data Loaded");
+  response.send("Products Loaded");
 });
 
 app.get("/initialize-database", async (request, response) => {
@@ -88,6 +87,17 @@ app.get("/initialize-database", async (request, response) => {
 });
 
 /* -----------------------CRUD OPERATIONS------------------------------*/
+app.get("/products/", async (request, response) => {
+  const productsData = await database.all(`
+        SELECT
+            *
+        FROM 
+            transactions 
+       ;
+    `);
+  response.send(productsData);
+});
+
 app.get("/get-product/:id", async (request, response) => {
   const { id } = request.params;
   const productData = await database.get(`
@@ -102,10 +112,6 @@ app.get("/get-product/:id", async (request, response) => {
 });
 
 const deleteProductData = async (deleteId) => {
-  // console.log(typeof productId);
-  if (deleteId === "") {
-    return "Product Not Found";
-  }
   const productData = await database.run(`
     DELETE FROM
       transactions
@@ -117,11 +123,59 @@ const deleteProductData = async (deleteId) => {
   };
 };
 
-app.delete("/products/:deleteId/", async (request, response) => {
+app.delete("/delete-product/:deleteId/", async (request, response) => {
   const { deleteId } = request.params;
   const deleteProduct = await deleteProductData(deleteId);
 
   response.send(deleteProduct);
+});
+
+const addProductData = async (
+  title,
+  price,
+  description,
+  category,
+  image,
+  sold,
+  dateOfSale
+) => {
+  const newProductData = await database.run(`
+   INSERT INTO transactions(title,price,description,category,image,sold,dateOfSale) 
+    VALUES (
+       '${title.replace(/'/g, "''")}',
+       ${price},
+       '${description.replace(/'/g, "''")}',
+       '${category.replace(/'/g, "''")}',
+       '${image.replace(/'/g, "''")}',
+       ${sold},
+       '${dateOfSale.replace(/'/g, "''")}'
+   )
+    ;`);
+
+  const productId = newProductData.lastID;
+  return { msg: `id = ${productId} New Product Added` };
+};
+
+app.post("/add-product/", async (request, response) => {
+  const {
+    title,
+    price,
+    description,
+    category,
+    image,
+    sold,
+    dateOfSale,
+  } = request.body;
+  const addPostData = await addProductData(
+    title,
+    price,
+    description,
+    category,
+    image,
+    sold,
+    dateOfSale
+  );
+  response.send(addPostData);
 });
 
 const modifyProductData = async (
@@ -134,26 +188,7 @@ const modifyProductData = async (
   sold,
   dateOfSale
 ) => {
-  const queryData = `SELECT id FROM transactions WHERE id = ${id}`;
-  const findData = await database.get(queryData);
-  // console.log(findData);
-  if (findData === undefined) {
-    const newProductData = await database.run(`
-   INSERT INTO transactions(id,title,price,description,category,image,sold,dateOfSale) 
-    VALUES (
-       ${id},
-       '${title.replace(/'/g, "''")}',
-       ${price},
-       '${description.replace(/'/g, "''")}',
-       '${category.replace(/'/g, "''")}',
-       '${image.replace(/'/g, "''")}',
-       ${sold},
-       '${dateOfSale.replace(/'/g, "''")}'
-   )
-    ;`);
-    return { msg: `id = ${id} New Product Added` };
-  } else if (findData !== undefined) {
-    const newProductData = await database.run(`
+  const newProductData = await database.run(`
    UPDATE 
         transactions 
    SET 
@@ -168,33 +203,8 @@ const modifyProductData = async (
      WHERE 
     id = ${id}
     ;`);
-    return { msg: `ProductID = ${id} ProductUpdatedSuccessfully` };
-  }
+  return { msg: `ProductID = ${id} ProductUpdatedSuccessfully` };
 };
-
-app.post("/add-product-data/", async (request, response) => {
-  const {
-    id,
-    title,
-    price,
-    description,
-    category,
-    image,
-    sold,
-    dateOfSale,
-  } = request.body;
-  const addPostData = await modifyProductData(
-    id,
-    title,
-    price,
-    description,
-    category,
-    image,
-    sold,
-    dateOfSale
-  );
-  response.send(addPostData);
-});
 
 app.put("/update-product/:id", async (request, response) => {
   const { id } = request.params;
@@ -458,7 +468,7 @@ app.get("/pie-chart", async (request, response) => {
   response.send(pieChartData);
 });
 
-app.get("/combined-data", async (request, response) => {
+app.get("/transactions-charts", async (request, response) => {
   const {
     searchText = "",
     selectedMonth = "",
