@@ -477,6 +477,7 @@ app.get("/transactions-charts", async (request, response) => {
     deleteId = "",
   } = request.query;
   const combinedData = {
+    initializedDatabase: await fetchAndInsert(),
     transactions: await getAllTransactions(
       limit,
       offset,
