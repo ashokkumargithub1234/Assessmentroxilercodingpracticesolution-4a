@@ -1,10 +1,10 @@
-Get http://localhost:3000/
+Get http://localhost:3000/initialize-database
 ###
 
 Get http://localhost:3000/products
 ###
 
-Get http://localhost:3000/get-product/60
+Get http://localhost:3000/get-product/61
 ###
 
 DELETE  http://localhost:3000/delete-product/61/
