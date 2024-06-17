@@ -473,11 +473,9 @@ app.get("/transactions-charts", async (request, response) => {
     searchText = "",
     selectedMonth = "",
     limit = 10,
-    offset = 0,
-    deleteId = "",
+    offset = 50,
   } = request.query;
   const combinedData = {
-    initializedDatabase: await fetchAndInsert(),
     transactions: await getAllTransactions(
       limit,
       offset,
